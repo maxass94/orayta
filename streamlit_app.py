@@ -52,7 +52,10 @@ with onglet_q:
                           "Si les versets ne suffisent pas, dis-le. Rappelle en une phrase que c'est une aide "
                           "à l'étude, pas une décision halakhique (psak).\n\n"
                           f"Versets :\n{contexte}\n\nQuestion : {q}\n\nRéponse :")
-                rep = genai.GenerativeModel("gemini-1.5-flash").generate_content(prompt).text
+                dispo = [m.name for m in genai.list_models()
+                         if "generateContent" in getattr(m, "supported_generation_methods", [])]
+                nom = next((x for x in dispo if "flash" in x.lower()), dispo[0] if dispo else "gemini-2.0-flash")
+                rep = genai.GenerativeModel(nom).generate_content(prompt).text
                 st.markdown("### Réponse")
                 st.markdown(rep)
             except Exception as e:
