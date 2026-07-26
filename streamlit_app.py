@@ -94,8 +94,18 @@ with onglet_q:
                           f"Versets :\n{contexte}\n\nQuestion : {q}\n\nRéponse :")
                 dispo = [m.name for m in genai.list_models()
                          if "generateContent" in getattr(m, "supported_generation_methods", [])]
-                nom = next((x for x in dispo if "flash" in x.lower()), dispo[0] if dispo else "gemini-2.0-flash")
-                rep = genai.GenerativeModel(nom).generate_content(prompt).text
+                fl = [x for x in dispo if "flash" in x.lower()]
+                cand = ([x for x in fl if "latest" in x.lower()] + fl
+                        + [x for x in dispo if "pro" in x.lower()] + dispo)
+                rep, err = None, None
+                for nom in dict.fromkeys(cand):
+                    try:
+                        rep = genai.GenerativeModel(nom).generate_content(prompt).text
+                        break
+                    except Exception as ex:
+                        err = ex
+                if rep is None:
+                    raise err or Exception("aucun modèle Gemini disponible")
                 st.markdown(f"<div class='reponse'><h3>Réponse</h3>{html.escape(rep).replace(chr(10),'<br>')}</div>",
                             unsafe_allow_html=True)
             except Exception as e:
